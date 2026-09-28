@@ -21,10 +21,10 @@ downstream latency `200` ms, service restarted before each run.
 ## 4. Before / after (warm-path migration, steps 2 and 5)
 | Run | Throughput (req/s) | p50 | p95 | p99 | Errors |
 |---|---|---|---|---|---|
-| Baseline (platform threads) | 139.88 | 1.36 | 1.71 | 2.25 | 0.00 |
-| Virtual threads enabled | ___ | ___ | ___ | ___ | ___ |
+| Baseline (platform threads) | 139.88 | 1.36 | 1.71 | 2.25 | 0.00% |
+| Virtual threads enabled | 842.63 | 214.8 | 324.0 | 461.3 | 0.15% |
 
-Verdict (improved / flat / worse — no explanation yet): ___
+Verdict: improved throughput (about 6x) and lower p50, p95 and p99; 78 requests were refused during the run.
 
 ## 5. Planted pinning defect (steps 6-8)
 Cold-start run with the defect: throughput ___, p50 ___, p95 ___, p99 ___
