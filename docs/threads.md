@@ -3,8 +3,8 @@
 > Fill every `___` from YOUR own runs. Nothing in this file is pre-measured.
 
 ## 1. Toolchain
-- `java -version`: ___
-- `mvn -v`: ___
+- `java -version`: ___java 25.0.4 2026-07-21 LTS
+- `mvn -v`: ___Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)
 - Branch: `feature/virtual-threads`
 
 ## 2. Current pooling (lab step 3)

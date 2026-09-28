@@ -15,43 +15,38 @@ import java.util.UUID;
 public class SettlementService {
 
     private final PaymentRepository paymentRepository;
-    private final BigDecimal feeRate;
+    private final FeeTableClient feeTableClient;
+    private final BigDecimal defaultFeeRate;
 
     public SettlementService(PaymentRepository paymentRepository,
-                              @Value("${ledger.fee-rate}") BigDecimal feeRate) {
+                              FeeTableClient feeTableClient,
+                              @Value("${ledger.fee-rate}") BigDecimal defaultFeeRate) {
         this.paymentRepository = paymentRepository;
-        this.feeRate = feeRate;
+        this.feeTableClient = feeTableClient;
+        this.defaultFeeRate = defaultFeeRate;
     }
 
     @Transactional
     public PaymentEntity recordPayment(String merchantId, long amountMinor, String currency) {
         PaymentEntity entity = new PaymentEntity(
-                UUID.randomUUID().toString(),
-                merchantId,
-                amountMinor,
-                currency,
-                Instant.now());
+                UUID.randomUUID().toString(), merchantId, amountMinor, currency, Instant.now());
         return paymentRepository.save(entity);
     }
 
-    /**
-     * Sum of a merchant's payments, less the ledger.fee-rate fee.
-     * The fee is truncated to whole minor units (rounding DOWN) before being
-     * subtracted from the gross total, so the merchant is never short-changed
-     * by a rounded-up fee.
-     */
+    /** BASELINE: one blocking downstream call per request. */
     public long amountOwed(String merchantId) {
         List<PaymentEntity> payments = paymentRepository.findByMerchantId(merchantId);
         if (payments.isEmpty()) {
             throw new NoSuchElementException("No payments found for merchant " + merchantId);
         }
 
-        long totalMinor = payments.stream()
-                .mapToLong(PaymentEntity::getAmountMinor)
-                .sum();
+        long totalMinor = payments.stream().mapToLong(PaymentEntity::getAmountMinor).sum();
+        String currency = payments.get(0).getCurrency();
+
+        BigDecimal rate = feeTableClient.fetchTable().getOrDefault(currency, defaultFeeRate);
 
         BigDecimal gross = BigDecimal.valueOf(totalMinor);
-        BigDecimal fee = gross.multiply(feeRate).setScale(0, RoundingMode.DOWN);
+        BigDecimal fee = gross.multiply(rate).setScale(0, RoundingMode.DOWN);
         return gross.subtract(fee).longValueExact();
     }
 }

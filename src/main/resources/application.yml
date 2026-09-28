@@ -20,3 +20,5 @@ spring:
 
 ledger:
   fee-rate: 0.031
+  downstream:
+    latency-ms: 200
