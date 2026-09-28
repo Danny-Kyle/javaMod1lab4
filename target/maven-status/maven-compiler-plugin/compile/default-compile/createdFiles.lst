@@ -1,2 +1,3 @@
 com\example\ledger\FeeTableClient.class
+com\example\ledger\FeeTableHolder.class
 com\example\ledger\ExecutorConfig.class

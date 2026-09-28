@@ -15,14 +15,11 @@ import java.util.UUID;
 public class SettlementService {
 
     private final PaymentRepository paymentRepository;
-    private final FeeTableClient feeTableClient;
     private final BigDecimal defaultFeeRate;
 
     public SettlementService(PaymentRepository paymentRepository,
-                              FeeTableClient feeTableClient,
                               @Value("${ledger.fee-rate}") BigDecimal defaultFeeRate) {
         this.paymentRepository = paymentRepository;
-        this.feeTableClient = feeTableClient;
         this.defaultFeeRate = defaultFeeRate;
     }
 
@@ -33,7 +30,6 @@ public class SettlementService {
         return paymentRepository.save(entity);
     }
 
-    /** BASELINE: one blocking downstream call per request. */
     public long amountOwed(String merchantId) {
         List<PaymentEntity> payments = paymentRepository.findByMerchantId(merchantId);
         if (payments.isEmpty()) {
@@ -43,7 +39,8 @@ public class SettlementService {
         long totalMinor = payments.stream().mapToLong(PaymentEntity::getAmountMinor).sum();
         String currency = payments.get(0).getCurrency();
 
-        BigDecimal rate = feeTableClient.fetchTable().getOrDefault(currency, defaultFeeRate);
+        // First call in the JVM triggers FeeTableHolder's static initializer (the planted defect).
+        BigDecimal rate = FeeTableHolder.rateFor(currency, defaultFeeRate);
 
         BigDecimal gross = BigDecimal.valueOf(totalMinor);
         BigDecimal fee = gross.multiply(rate).setScale(0, RoundingMode.DOWN);
