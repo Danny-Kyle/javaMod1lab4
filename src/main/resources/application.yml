@@ -17,6 +17,9 @@ spring:
     open-in-view: false
   flyway:
     enabled: true
+  threads:
+    virtual:
+      enabled: true
 
 ledger:
   fee-rate: 0.031

@@ -12,16 +12,16 @@
 |---|---|---|---|
 | `applicationExecutor` (ThreadPoolTaskExecutor, `ExecutorConfig`) | 32 | 64 | 500 |
 
-Tomcat's own request pool (defaults, for reference): max threads ___, accept-count ___.
+Tomcat's own request pool (defaults, for reference): max threads 200, accept-count 100.
 
 ## 3. Load profile
 `k6 run load\settlement.js` — 200 VUs, 60 s, `GET /payments/settlement?merchantId=MR-4471`,
-downstream latency `___` ms, service restarted before each run.
+downstream latency `200` ms, service restarted before each run.
 
 ## 4. Before / after (warm-path migration, steps 2 and 5)
 | Run | Throughput (req/s) | p50 | p95 | p99 | Errors |
 |---|---|---|---|---|---|
-| Baseline (platform threads) | ___ | ___ | ___ | ___ | ___ |
+| Baseline (platform threads) | 139.88 | 1.36 | 1.71 | 2.25 | 0.00 |
 | Virtual threads enabled | ___ | ___ | ___ | ___ | ___ |
 
 Verdict (improved / flat / worse — no explanation yet): ___
