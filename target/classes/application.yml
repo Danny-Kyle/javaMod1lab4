@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ledger-settlement
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ledger
+    username: ledger
+    password: ledger
+  mvc:
+    problemdetails:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+ledger:
+  fee-rate: 0.031
