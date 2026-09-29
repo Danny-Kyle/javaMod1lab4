@@ -4,9 +4,26 @@
 
 ## 1. Starting point (lab step 1)
 Output of `java -XX:+PrintFlagsFinal -version` filtered for the two flags:
-- `MaxHeapSize` = ___
-- `UseG1GC` = ___  (true means G1 is the default collector on this machine)
-- `java -version`: ___
+
+size_t MaxHeapSize                              = 6413090816                                {product}
+{ergonomic}
+
+size_t SoftMaxHeapSize                          = 6413090816                             {manageable}
+{ergonomic}
+
+bool UseG1GC                                  = true                                      {product}
+{ergonomic}
+
+java version "25.0.4" 2026-07-21 LTS
+
+Java(TM) SE Runtime Environment (build 25.0.4+7-LTS-189)
+
+Java HotSpot(TM) 64-Bit Server VM (build 25.0.4+7-LTS-189, mixed mode, sharing)
+
+
+- `MaxHeapSize` = 6116 MB
+- `UseG1GC` = true (true means G1 is the default collector on this machine)
+- `java -version`: 25.04
 - Machine: ___ CPU cores, ___ GB RAM
 
 ## 2. Load profile (lab step 2)
