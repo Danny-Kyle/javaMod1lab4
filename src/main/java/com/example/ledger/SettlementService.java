@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
@@ -35,20 +34,14 @@ public class SettlementService {
     }
 
     /**
-     * Sum of a merchant's payments, less the ledger.fee-rate fee.
-     * The fee is truncated to whole minor units (rounding DOWN) before being
-     * subtracted from the gross total, so the merchant is never short-changed
-     * by a rounded-up fee.
+     * Same result as before (payment total less the fee, fee truncated), but the total
+     * now comes from one SUM query instead of materialising every payment as an object.
      */
     public long amountOwed(String merchantId) {
-        List<PaymentEntity> payments = paymentRepository.findByMerchantId(merchantId);
-        if (payments.isEmpty()) {
+        Long totalMinor = paymentRepository.sumAmountMinorByMerchantId(merchantId);
+        if (totalMinor == null) {
             throw new NoSuchElementException("No payments found for merchant " + merchantId);
         }
-
-        long totalMinor = payments.stream()
-                .mapToLong(PaymentEntity::getAmountMinor)
-                .sum();
 
         BigDecimal gross = BigDecimal.valueOf(totalMinor);
         BigDecimal fee = gross.multiply(feeRate).setScale(0, RoundingMode.DOWN);
