@@ -50,8 +50,15 @@ public class SettlementService {
                 .mapToLong(PaymentEntity::getAmountMinor)
                 .sum();
 
+        //BigDecimal gross = BigDecimal.valueOf(totalMinor);
+        /**BigDecimal fee = gross.multiply(feeRate).setScale(0, RoundingMode.DOWN);
+        return gross.subtract(fee).longValueExact();**/
+        return computeOwed(totalMinor, feeRate);
+    }
+    public static long computeOwed(long totalMinor, BigDecimal feeRate) {
         BigDecimal gross = BigDecimal.valueOf(totalMinor);
         BigDecimal fee = gross.multiply(feeRate).setScale(0, RoundingMode.DOWN);
         return gross.subtract(fee).longValueExact();
     }
+
 }

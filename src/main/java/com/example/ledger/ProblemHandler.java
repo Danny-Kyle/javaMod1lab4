@@ -20,9 +20,15 @@ public class ProblemHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex, WebRequest request) {
-        String detail = ex.getBindingResult().getFieldErrors().stream()
+//        String detail = ex.getBindingResult().getFieldErrors().stream()
+//                .map(fieldError -> fieldError.getField() + " " + fieldError.getDefaultMessage())
+//                .collect(Collectors.joining("; "));
+
+        java.util.List<String> fieldMessages = ex.getBindingResult().getFieldErrors().stream()
                 .map(fieldError -> fieldError.getField() + " " + fieldError.getDefaultMessage())
-                .collect(Collectors.joining("; "));
+                .toList();
+        String detail = ProblemMessages.joinFieldErrors(fieldMessages);
+
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
         problem.setType(URI.create("https://ledger.example.com/problems/validation-error"));
