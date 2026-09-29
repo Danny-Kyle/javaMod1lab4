@@ -27,24 +27,30 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.0.4+7-LTS-189, mixed mode, sharing)
 - Machine: ___ CPU cores, ___ GB RAM
 
 ## 2. Load profile (lab step 2)
-- Script: `perf/steady-load.js`, executor `constant-arrival-rate`, rate ___ req/s, duration 10m
+- Script: `perf/steady-load.js`, executor `constant-arrival-rate`, rate 10 req/s, duration 10m
 - Endpoint: `GET /payments/settlement?merchantId=MR-9001`
 - Dataset: 20,000 payment rows for MR-9001 (`perf/seed.sql`)
-- Answer returned (must be identical in both runs): ___
-- Why this rate: ___ (held with `dropped_iterations` = ___)
+- Answer returned (must be identical in both runs): INFO[0000] SETUP answer for MR-9001: {"merchantId":"MR-9001","amountOwedMinor":10581674}  source=console
+- Why this rate: 10 req/s (held with `dropped_iterations` = 0)
 
 ## 3. Baseline numbers (lab step 4) — `gc-baseline.jfr`
 | Measure | Value |
 |---|---|
 | Total allocation rate (MB/s) | ___ |
-| Top 3 allocating classes | 1. ___  2. ___  3. ___ |
-| Collection count | ___ |
-| Longest pause | ___ ms |
+| Top 3 allocating classes | 1. 20.05%  2. 13.91%  3. 7.86% |
+| Collection count | 249 garbage collection events |
+| Longest pause | 135 ms |
 | Where the numbers came from | (JMC page / `jfr view` command) ___ |
 
+-Note: The 10-minute recording clock starts when the JVM starts, a little before k6, so the recording ends ~20-30 s before k6 does
+
 ## 4. Classification — written BEFORE changing anything (lab step 5)
-Allocation pressure, long pauses, or neither? ___
-Evidence from the numbers above: ___
+Classification: Allocation Pressure
+
+Evidence:
+The profile is heavily dominated by object allocations stemming from database tuple decoding (org.postgresql.core.PGStream.receiveTupleV3 at 17.84% and Calendar / Date creation at >28% combined). The top classes being byte[], int[], and GregorianCalendar show that Hibernate is constantly deserializing massive lists of database rows into heap objects during payment processing.
+
+Prescribed Fix: Code Change (Path 7A) — Reduce allocations at the site by replacing full entity/payment loading with a database-level SUM query.
 
 ## 5. The one change (lab steps 6 or 7)
 - Type: code fix  /  heap size  /  collector   (delete the ones that do not apply)
