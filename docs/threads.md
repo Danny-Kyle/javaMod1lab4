@@ -91,17 +91,23 @@ Cold-start run with the defect: throughput 856.99 ms, p50 189.86ms, p95 467.54ms
 2. This code has no synchronized block anyway; the blocking is inside a class initializer, so a ReentrantLock would change nothing.
 
 ## 6. Fix (step 9)
-What changed: ___
-Why result semantics are identical: ___
+What changed: the fee table is fetched once when the FeeTable bean is created at startup, before the server accepts traffic
+Why result semantics are identical: same client, same rates, same fallback, and PaymentControllerIT still gives 124469
 Concurrency test: `FeeTableTest.tableIsLoadedOnceAndSafeUnderConcurrentFirstUse`
 
 ## 7. Final before / after (cold start)
 | Run | Throughput (req/s) | p50 | p95 | p99 | Pinned events |
 |---|---|---|---|---|---|
 | Planted defect (`pinned.jfr`) | ___ | ___ | ___ | ___ | ___ |
-| Fixed (`fixed.jfr`) | ___ | ___ | ___ | ___ | 0 |
+| Fixed (`fixed.jfr`) | 968.3 | 157.41ms | 459.88ms | 750.9ms | 0 |
+
+I ran a 3 request warm-up  before the final recording because a cold run still showed unrelated class-loading contention events
+
+fixed-cold.jfr is included for reference showing those events disappear once warmed.
 
 ## 8. Pull request
-- **Change:** ___
-- **Risk:** ___
-- **Rollback:** ___
+- **Change:** replaced the FeeTableHolder static-initializer lookup with an eagerly-constructed FeeTable Spring bean, removing the pinning defect while keeping virtual threads enabled.
+
+- **Risk:** startup now blocks briefly (~200ms) on the downstream fetch before the app can serve traffic; if the downstream call fails at startup the app won't start
+
+- **Rollback:** revert this commit; the previous FeeTableHolder version differs only in when the fetch happens, not in the data returned.
