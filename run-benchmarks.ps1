@@ -55,8 +55,8 @@ try {
     & $java @($manifest.dceArguments) 2>&1 | Tee-Object -FilePath (Join-Path $out 'dce.txt')
     if ($LASTEXITCODE -ne 0) { throw "DCE demonstration failed; inspect $out" }
     $clock.Stop()
-    $manifest.completedAt = (Get-Date).ToString('o')
-    $manifest.benchmarkSeconds = $clock.Elapsed.TotalSeconds
+    $manifest['completedAt'] = (Get-Date).ToString('o')
+    $manifest['benchmarkSeconds'] = $clock.Elapsed.TotalSeconds
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
     Write-Host "Evidence saved without replacing older results: $out"
 } finally {
