@@ -1,49 +1,97 @@
 # JMH Benchmark Suite
 
+## Methods and service paths
 
-## 1. Methods chosen (lab step 2)
-| Method | Why chosen |
+| Method | Why measured |
 |---|---|
-| `PaymentController.toResponse(PaymentEntity)` | Runs on every POST /payments response; a serialisation/mapping method. |
-| `ProblemMessages.joinFieldErrors(List<String>)` | Runs on every invalid POST /payments; string/collection-heavy work on the error path. |
-| `SettlementService.computeOwed(long, BigDecimal)` | The core settlement calculation; stays on `long` minor units and `BigDecimal` rather than `double` because binary floating point cannot hold a money value exactly. |
+| `PaymentController.toResponse(PaymentEntity)` | Maps every successful POST response; creates the response record. |
+| `ProblemMessages.joinFieldErrors(List<String>)` | Builds validation-error detail on the invalid POST path. |
+| `SettlementService.computeOwed(long, BigDecimal)` | Applies the core fee rule on the settlement read path, preserving long minor units, BigDecimal and RoundingMode.DOWN. |
 
-(All three are real production methods, extracted as small static functions so they
-can be measured without a database or Spring context — see main-patch/README.md
-for exactly what was extracted and why.)
+Production methods remain in the service; wrappers, state and JMH dependencies
+live in `benchmarks`. The mapping state uses a payment shaped like the service
+request, the join state uses field-error messages, and the calculation state
+uses the seed total and fee rate. Inputs are created in `@Setup` under
+`@State(Scope.Benchmark)`, outside measured methods.
 
-## 2. Dead code elimination demonstration (lab steps 3-4)
-Benchmark: `DeadCodeEliminationDemoBenchmark`
+## Reproduce
 
-| Variant | Score | Error | Unit |
-|---|---|---|---|
-| `wrongDiscardsResult` (broken — result discarded) | 0.001 | ± 0.009 | us/op |
-| `fixedReturnsResult` (fixed — value returned) | 0.739 | ± 0.254 | us/op |
-| `fixedConsumesWithBlackhole` (fixed — Blackhole) | 0.754 | ± 0.238 | us/op |
+Run `powershell -NoProfile -File .\run-benchmarks.ps1` from the repository root.
+See [README](../README.md) for prerequisites, build-only checks and the exact
+commands. No manual local-Maven install or external sibling folder is required.
 
-Size of the dead-code-elimination error: the broken version reported 750×
-faster (or: reported a time indistinguishable from measurement noise / near
-zero) than either fixed version, because the JIT proved `sum` was never read
-and deleted the loop entirely.
+## Configuration
 
-## 3. Run configuration (lab step 6)
-`@BenchmarkMode(Mode.AverageTime)`, `@OutputTimeUnit(TimeUnit.MICROSECONDS)`,
-`@Warmup(iterations = 5)`, `@Measurement(iterations = 10)`, `@Fork(3)`.
+All four classes use AverageTime, MICROSECONDS, five warmup iterations,
+ten measurement iterations and three forks. The historical JSON records ten
+seconds per iteration. New runs retain the per-iteration console output so
+warmup stability can be assessed; do not assert stability without checking it.
 
-Why forks matter (one line, your own words): Forks run benchmarks in separate JVM processes to prevent JIT compilation profile pollution and account for OS-level runtime variance
+Student draft retained for confirmation, not replaced by agent-authored prose:
 
-## 4. Results table (lab steps 7-9) — from `results.json`
-| Benchmark | Score | Error | Unit | Bytes/op (`gc.alloc.rate.norm`) |
-|---|---|---|---|---|
-| `MappingBenchmark.mapEntityToResponse` | 0.009 | ± 0.001 | us/op | 32.000  0.001 B/op |
-| `StringJoinBenchmark.joinFieldErrorMessages` | 0.310 | ± 0.080 | us/op | 501.334 10.251 B/op |
-| `SettlementCalcBenchmark.computeSettlementOwed` | 0.022 | ± 0.006 | us/op | ~~10?? B/op |
+Forks run benchmarks in separate JVM processes to prevent JIT compilation profile pollution and account for OS-level runtime variance
 
-Comparisons: None of the error bars overlap confirming each benchmark measures a distinct, statistically significant performance difference.
+## Historical three-method result
 
-## 5. Limits of this suite (lab step 10 — name at least three)
+Source: [`results.json`](../results.json), recovered byte-for-byte from the
+original sibling module. It records Java 25.0.4+7-LTS-189 and JMH 1.37. This is
+existing evidence, not a fresh run of the integrated reactor. The new runner
+will save a source commit, jar hash and machine manifest for its next run.
+
+| Benchmark | Time score +/- error | Allocated bytes/op +/- error |
+|---|---|---|
+| `MappingBenchmark.mapEntityToResponse` | 0.00902785 +/- 0.00114297 us/op | 32.000006 +/- 8.01907e-07 B/op |
+| `SettlementCalcBenchmark.computeSettlementOwed` | 0.0221702 +/- 0.00551283 us/op | 1.5446873e-05 +/- 3.82067e-06 B/op |
+| `StringJoinBenchmark.joinFieldErrorMessages` | 0.310268 +/- 0.0800445 us/op | 501.33355 +/- 10.2507 B/op |
+
+All scores, errors and units above come from the matching primaryMetric and
+secondaryMetrics.gc.alloc.rate.norm entries in results.json. The allocation
+near zero for the settlement method is retained as measured; it must not be
+replaced with a guessed object size. The JIT can remove intermediate allocations.
+
+None of these three recorded score intervals overlap. They represent different
+operations, so this observation does not demonstrate that an implementation
+change improved performance. No optimization win is claimed from comparing
+mapping, string joining and fee calculation. Comparable variants must be judged
+by their own intervals; overlapping comparisons must be labelled inconclusive.
+The confidence level for the final report must be checked against the saved JMH
+console output; it is not explicitly labelled in this historical JSON.
+
+For allocation-site interpretation, mapping constructs the response record in
+PaymentController.toResponse; joining invokes Collectors.joining in
+ProblemMessages.joinFieldErrors. These are source-level candidate allocation
+sites, not a replacement for an allocation profiler's stack evidence.
+
+## Dead-code-elimination demonstration
+
+`DeadCodeEliminationDemoBenchmark` keeps the deliberately discarded result,
+return-value fix and Blackhole fix in source. The result of each fixed method
+is observable to JMH. The discarded calculation allows the JIT to remove work.
+
+Previous report figures were 0.001 +/- 0.009 us/op (discarded),
+0.739 +/- 0.254 us/op (return), and 0.754 +/- 0.238 us/op (Blackhole).
+No raw demo output was found, so these remain unverified historical claims and
+are not final evidence. No precise 750x speedup is asserted: the discarded
+score's interval covers zero and makes a ratio unstable. The two reported fixed
+intervals overlap; that historical comparison is inconclusive, pending raw
+results. Run the script and use dce-results.json/dce.txt for the final table.
+
+## Limits — student draft retained for confirmation
+
 1. No Concurrency / Load: It measures isolated, single-threaded method execution and reveals nothing about system behavior under thread contention or parallel HTTP traffic.
 
 2. Fixed Synthetic Data: It uses small, static inputs in memory, failing to reflect cache misses or allocation behavior seen with real production data sizes.
 3. Isolated from Framework Stack: It executes in a microbenchmark harness without real-world runtime overhead like Tomcat request handling, Jackson JSON serialization, or database/JPA persistence.
-4. ___ (optional extra limit)
+
+For Exceeds, the student should add a specific further measurement addressing
+each limit. The forks sentence and final limits must remain the student's words.
+
+## Evidence still needed before resubmission
+
+- A clean Java 25 build/test log for this source and a newly identified run.
+- Raw DCE scores/errors, the exact command and any overrides (none planned).
+- A verified JMH confidence level, warmup assessment and elapsed full-run time.
+- Student confirmation/revision of the forks sentence and three limits.
+
+See [evidence index](../evidence/README.md). Historical results remain clearly
+separate until the student supplies the new run; missing results are not invented.
