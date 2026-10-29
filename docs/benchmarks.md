@@ -16,7 +16,7 @@ uses the seed total and fee rate. Inputs are created in `@Setup` under
 
 ## Reproduce
 
-Run `powershell -NoProfile -File .\run-benchmarks.ps1` from the repository root.
+Run `powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1` from the repository root.
 See [README](../README.md) for prerequisites, build-only checks and the exact
 commands. No manual local-Maven install or external sibling folder is required.
 

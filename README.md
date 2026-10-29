@@ -3,7 +3,7 @@
 From this repository's root, on a quiet machine with JDK 25, Maven and Docker running:
 
 ```powershell
-powershell -NoProfile -File .\run-benchmarks.ps1
+powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1
 ```
 
 This one command verifies Java 25, builds and tests the service and benchmarks in
@@ -23,7 +23,7 @@ the executable Spring Boot jar is `target/ledger-settlement-0.0.1-SNAPSHOT-exec.
 JMH dependencies belong only to `benchmarks`. No manual jar install or sibling
 folder is required. `benchmarks/target/benchmarks.jar` is the executable JMH jar.
 
-Use `powershell -NoProfile -File .\run-benchmarks.ps1 -BuildOnly` to build, run
+Use `powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1 -BuildOnly` to build, run
 tests and list benchmarks without starting measurements. For a different Java
 25 installation, pass `-JdkHome 'C:\path\to\jdk-25'`; other major versions fail.
 
