@@ -1,3 +1,3 @@
 # Preserve raw evidence bytes across Windows checkouts.
-/results.json -text
-/evidence/**/*.json -text
+/results.json -text -whitespace
+/evidence/**/*.json -text -whitespace
