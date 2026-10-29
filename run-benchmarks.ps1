@@ -13,6 +13,7 @@ if ($LASTEXITCODE -ne 0 -or $javaVersion -notmatch '(?m)^(?:openjdk|java) 25(?:\
 $env:JAVA_HOME = $JdkHome
 $env:Path = "$JdkHome\bin;$env:Path"
 $maven = (Get-Command mvn.cmd -ErrorAction Stop).Source
+. (Join-Path $PSScriptRoot 'scripts\Invoke-NativeLogged.ps1')
 
 Push-Location $PSScriptRoot
 try {
@@ -44,18 +45,30 @@ try {
         operatingSystem = [Environment]::OSVersion.VersionString
         benchmarkJarSha256 = (Get-FileHash -LiteralPath $jar -Algorithm SHA256).Hash
         startedAt = (Get-Date).ToString('o')
+        status = 'Running'
         suiteArguments = @('-jar', $jar, 'MappingBenchmark', 'StringJoinBenchmark', 'SettlementCalcBenchmark', '-prof', 'gc', '-rf', 'json', '-rff', $suiteJson)
         dceArguments = @('-jar', $jar, 'DeadCodeEliminationDemoBenchmark', '-prof', 'gc', '-rf', 'json', '-rff', $dceJson)
     }
     $manifestPath = Join-Path $out 'manifest.json'
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
     $clock = [Diagnostics.Stopwatch]::StartNew()
-    & $java @($manifest.suiteArguments) 2>&1 | Tee-Object -FilePath (Join-Path $out 'suite.txt')
-    if ($LASTEXITCODE -ne 0) { throw "Suite failed; inspect $out" }
-    & $java @($manifest.dceArguments) 2>&1 | Tee-Object -FilePath (Join-Path $out 'dce.txt')
-    if ($LASTEXITCODE -ne 0) { throw "DCE demonstration failed; inspect $out" }
+    try {
+        Invoke-NativeLogged -Executable $java -ArgumentList $manifest.suiteArguments -LogPath (Join-Path $out 'suite.txt')
+        $suiteResults = @(Get-Content -LiteralPath $suiteJson -Raw | ConvertFrom-Json)
+        if ($suiteResults.Count -ne 3) { throw 'Expected three completed real-method results.' }
+        Invoke-NativeLogged -Executable $java -ArgumentList $manifest.dceArguments -LogPath (Join-Path $out 'dce.txt')
+        $dceResults = @(Get-Content -LiteralPath $dceJson -Raw | ConvertFrom-Json)
+        if ($dceResults.Count -ne 3) { throw 'Expected three completed DCE results.' }
+    } catch {
+        $manifest['status'] = 'Failed'
+        $manifest['failedAt'] = (Get-Date).ToString('o')
+        $manifest['failure'] = $_.Exception.Message
+        $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
+        throw
+    }
     $clock.Stop()
     $manifest['completedAt'] = (Get-Date).ToString('o')
+    $manifest['status'] = 'Completed'
     $manifest['benchmarkSeconds'] = $clock.Elapsed.TotalSeconds
     $manifest | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $manifestPath -Encoding utf8
     Write-Host "Evidence saved without replacing older results: $out"
