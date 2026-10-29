@@ -1,4 +1,4 @@
-# Proposed description for existing PR #3
+# Reproducible Java 25 JMH benchmarks and verified evidence
 
 ## Change
 
@@ -55,11 +55,9 @@ runtime deployment is part of this benchmark PR.
 
 ## Evidence
 
-- `README.md`: one-command reproduction and observed elapsed duration.
-- `docs/benchmarks.md`: scores/errors/units, allocations, inconclusive comparison,
+- [README](https://github.com/Danny-Kyle/javaMod1lab4/blob/feature/jmh-benchmark/README.md): one-command reproduction and observed elapsed duration.
+- [Report](https://github.com/Danny-Kyle/javaMod1lab4/blob/feature/jmh-benchmark/docs/benchmarks.md): scores/errors/units, allocations, inconclusive comparison,
   warmup assessment and three limits with proposed follow-up measurements.
-- `results.json`: final three-method raw result.
-- `evidence/jmh-20261029-133647/`: raw results, logs, manifest, hashes and context.
-- `evidence/clean-clone-build-2026-10-29.txt`: independent-clone build/discovery log.
-
-This description is prepared locally; it has not yet replaced the GitHub PR body.
+- [Final results JSON](https://github.com/Danny-Kyle/javaMod1lab4/blob/feature/jmh-benchmark/results.json).
+- [Raw evidence archive](https://github.com/Danny-Kyle/javaMod1lab4/tree/feature/jmh-benchmark/evidence/jmh-20261029-133647): raw results, logs, manifest, hashes and context.
+- [Clean-clone build log](https://github.com/Danny-Kyle/javaMod1lab4/blob/feature/jmh-benchmark/evidence/clean-clone-build-2026-10-29.txt): independent-clone build/discovery log.

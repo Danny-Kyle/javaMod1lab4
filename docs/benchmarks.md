@@ -14,6 +14,12 @@ The mapping input has the service's payment shape, string state contains field-e
 messages, and the settlement state uses the seed total and configured fee rate.
 No Spring context or database request is part of a measured method.
 
+The five-message join input is a synthetic stress case: two example size-error
+messages refer to constraints not present in the current request record. Its
+shape is a field-error list, but its measured cost must not be presented as the
+typical validation-error cost of the current endpoint. A service-matched input
+would require a new run before replacing this result.
+
 ## Reproduction and run identity
 
 Run `powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1`
@@ -64,9 +70,12 @@ joining and calculation. The near-zero settlement allocation is the measured
 profiler result, not a guessed object size; intermediate objects may be optimized
 away. A result below one byte/op is an average, not a fractional object.
 
-Mapping constructs the response record in `PaymentController.toResponse`;
-the join method uses `Collectors.joining` in `ProblemMessages.joinFieldErrors`.
-Those are concrete source-level allocation sites. The aggregate GC profiler does
+The mapping score of 32.0000078 B/op is connected to response-record construction
+at [PaymentController.java line 39](../src/main/java/com/example/ledger/PaymentController.java#L39).
+The join score of 490.666813 B/op is connected to the joining pipeline at
+[ProblemMessages.java line 19](../src/main/java/com/example/ledger/ProblemMessages.java#L19),
+which creates the joined result and collector intermediates. These are concrete
+source-level allocation sites. The aggregate GC profiler does
 not supply stack attribution, so the string method's entire allocation total
 is not assigned to a single source line without further profiling.
 
