@@ -54,11 +54,11 @@ try {
     $clock = [Diagnostics.Stopwatch]::StartNew()
     try {
         Invoke-NativeLogged -Executable $java -ArgumentList $manifest.suiteArguments -LogPath (Join-Path $out 'suite.txt')
-        $suiteResults = @(Get-Content -LiteralPath $suiteJson -Raw | ConvertFrom-Json)
-        if ($suiteResults.Count -ne 3) { throw 'Expected three completed real-method results.' }
+        $suiteResults = Get-Content -LiteralPath $suiteJson -Raw | ConvertFrom-Json
+        if ($suiteResults -isnot [System.Array] -or $suiteResults.Count -ne 3) { throw 'Expected three completed real-method results.' }
         Invoke-NativeLogged -Executable $java -ArgumentList $manifest.dceArguments -LogPath (Join-Path $out 'dce.txt')
-        $dceResults = @(Get-Content -LiteralPath $dceJson -Raw | ConvertFrom-Json)
-        if ($dceResults.Count -ne 3) { throw 'Expected three completed DCE results.' }
+        $dceResults = Get-Content -LiteralPath $dceJson -Raw | ConvertFrom-Json
+        if ($dceResults -isnot [System.Array] -or $dceResults.Count -ne 3) { throw 'Expected three completed DCE results.' }
     } catch {
         $manifest['status'] = 'Failed'
         $manifest['failedAt'] = (Get-Date).ToString('o')
