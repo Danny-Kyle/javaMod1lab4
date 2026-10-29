@@ -28,10 +28,16 @@ public class PaymentController {
         PaymentEntity saved = settlementService.recordPayment(
                 request.merchantId(), request.amountMinor(), request.currency());
 
-        PaymentResponse body = new PaymentResponse(
-                saved.getId(), saved.getMerchantId(), saved.getAmountMinor(), saved.getCurrency());
+//        PaymentResponse body = new PaymentResponse(
+//                saved.getId(), saved.getMerchantId(), saved.getAmountMinor(), saved.getCurrency());
+        PaymentResponse body = toResponse(saved);
 
         return ResponseEntity.created(URI.create("/payments/" + saved.getId())).body(body);
+    }
+
+    public static PaymentResponse toResponse(PaymentEntity entity) {
+        return new PaymentResponse(
+                entity.getId(), entity.getMerchantId(), entity.getAmountMinor(), entity.getCurrency());
     }
 
     @GetMapping("/settlement")
