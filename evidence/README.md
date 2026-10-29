@@ -12,8 +12,10 @@ byte-for-byte out of the ignored runs directory into the committed archive.
 | `jmh-20261029-133647/suite.txt` | Full suite console output, including warmups and confidence level |
 | `jmh-20261029-133647/dce.txt` | Full DCE console output and matching compiler-Blackhole mode |
 | `jmh-20261029-133647/manifest.json` | Raw source commit, command arguments, exact Java/Maven build, machine, jar hash and elapsed time |
+| `jmh-20261029-133647/run-context.json` | Subsequent student confirmation: laptop plugged in; power mode and other unrecorded settings unknown |
 | `jmh-20261029-133647/verification.json` | Derived archive hashes, validation checks and point-estimate ratios; not raw benchmark output |
 | `build-check-2026-10-29.txt` | Student-pasted successful build-only/test/discovery transcript before runner-only logging corrections |
+| `clean-clone-build-2026-10-29.txt` | Successful documented build-only command in an independent clone at 2ff5699, on the same Windows machine with the existing Maven cache; no benchmarks rerun |
 | `historical/sibling-results.json` | Original recovered sibling JSON; retained for provenance, not the final run |
 
 PowerShell 5.1 wrote the raw console logs as UTF-16. Some console symbols were

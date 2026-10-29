@@ -39,7 +39,7 @@ JMH warns that compiler Blackholes are experimental. Generated machine code was
 not inspected, so these observations do not prove the exact optimized instruction
 sequence or generalize to another JVM/Blackhole mode.
 
-Your explanation of forks (authorship confirmed during review):
+Why forks matter:
 
 Forks run benchmarks in separate JVM processes to prevent JIT compilation profile pollution and account for OS-level runtime variance
 
@@ -126,12 +126,29 @@ so their apparent point-estimate gap does not justify choosing one for speed.
 
 1. No Concurrency / Load: It measures isolated, single-threaded method execution and reveals nothing about system behavior under thread contention or parallel HTTP traffic.
 
-2. Fixed Synthetic Data: It uses small, static inputs in memory, failing to reflect cache misses or allocation behavior seen with real production data sizes.
+   Follow-up measurement (proposed, not performed): run the settlement HTTP
+   endpoint under several fixed concurrency levels with k6, keeping the dataset
+   unchanged. Record throughput, p95/p99 latency and errors, and inspect thread
+   and database-connection contention with JFR. This tests how the complete
+   service scales under concurrent requests.
+
+2. Fixed Synthetic Data: It uses small, static inputs in memory, which do not establish cache-miss or allocation behavior at production data sizes.
+
+   Follow-up measurement (proposed, not performed): parameterize the join
+   collection and demonstration-array sizes with JMH `@Param`, using a documented
+   range of workload-relevant sizes and working sets. Record time/op and B/op
+   for each size; collect cache-miss counters where platform support permits.
+   Varying size is a useful sensitivity check, not proof that the inputs match
+   an actual production workload.
+
 3. Isolated from Framework Stack: It executes in a microbenchmark harness without real-world runtime overhead like Tomcat request handling, Jackson JSON serialization, or database/JPA persistence.
 
-Authorship of these three limits was confirmed during review. The student should name a
-specific further measurement for each limit. The forks sentence and these limits
-remain reserved for the student under the assistance brief.
+   Follow-up measurement (proposed, not performed): profile the real payment,
+   validation-error and settlement HTTP paths with the Spring application and
+   Postgres running. Save end-to-end request latency from k6 together with JFR
+   execution/allocation samples to identify framework and database work absent
+   from these isolated method benchmarks. Do not subtract unrelated timings
+   and label the difference as framework overhead.
 
 ## Evidence status and remaining submission checks
 
@@ -140,9 +157,19 @@ remain reserved for the student under the assistance brief.
 - Earlier sibling results are preserved separately as historical evidence.
 - The student's successful Java 25 build-only transcript is retained; the final
   runner also gates both suites on a successful build/test/discovery pass.
-- The forks explanation and three limits are confirmed as the student's writing; their follow-up measurement sentences remain to be supplied. Clean-clone reproduction is being checked.
-- The physical quiet/power conditions must be confirmed by the student; the
-  manifest does not record every hardware setting.
+- The forks sentence and original three limits were confirmed as the student's
+  writing. The student requested help adding the proposed follow-up measurements
+  and reviewing technical wording; those additions should be read and understood
+  before submission. No follow-up measurement above is claimed to have run.
+- An independent local clone at commit `2ff5699` passed the documented
+  `run-benchmarks.ps1 -BuildOnly` command on Java 25, with one payment integration
+  test, no failures/errors/skips, and six discovered benchmark methods. The log
+  is [clean-clone-build-2026-10-29.txt](../evidence/clean-clone-build-2026-10-29.txt).
+  This check used the same Windows machine and existing Maven cache; it is not
+  a second-machine or CI measurement, and it did not rerun the benchmarks.
+- The student confirmed the laptop was plugged in. Power mode and other
+  unrecorded settings are unknown; background activity was not independently
+  recorded. See the supplemental run-context file; the raw manifest is unchanged.
 - Changes remain local until the complete submission review; no PR was merged.
 
 See [evidence index](../evidence/README.md) for every file and its provenance.
