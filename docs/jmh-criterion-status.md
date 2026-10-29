@@ -22,4 +22,4 @@ This is a JMH progress check, not a marker-awarded score or the final three-lab 
 | C3 | Evidence quality | 4 | Verified | Named report/root JSON, units, direct evidence index, raw logs, context and clean-clone proof; no template blanks. |
 | C4 | Statistical honesty | 3 | Meets; Exceeds not established | Prior overstatement is withdrawn and overlap respected. No unsupported assertion that an old result was proved to be noise; no controlled historical comparison exists. |
 
-See [report](benchmarks.md), [evidence index](../evidence/README.md), and [proposed PR description](jmh-pr-description.md). Changes remain local; main and the existing remote branch/PR have not been changed.
+See [report](benchmarks.md), [evidence index](../evidence/README.md), and [PR description](jmh-pr-description.md). Check PR #3's commit list for the published revision. Publishing the feature branch does not merge into main.

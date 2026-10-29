@@ -179,6 +179,6 @@ so their apparent point-estimate gap does not justify choosing one for speed.
 - The student confirmed the laptop was plugged in. Power mode and other
   unrecorded settings are unknown; background activity was not independently
   recorded. See the supplemental run-context file; the raw manifest is unchanged.
-- Changes remain local until the complete submission review; no PR was merged.
+- This benchmark work is reviewed through PR #3; no PR merge is part of this submission.
 
 See [evidence index](../evidence/README.md) for every file and its provenance.
