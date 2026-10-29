@@ -1,0 +1,37 @@
+﻿{
+    "sourceCommit":  "ae8f0d4b4810375aa123526c308ae4318be05135",
+    "javaVersion":  "java 25.0.4 2026-07-21 LTS\r\nJava(TM) SE Runtime Environment (build 25.0.4+7-LTS-189)\r\nJava HotSpot(TM) 64-Bit Server VM (build 25.0.4+7-LTS-189, mixed mode, sharing)",
+    "mavenVersion":  "Apache Maven 3.9.16 (2bdd9fddda4b155ebf8000e807eb73fd829a51d5)\r\nMaven home: C:\\Program Files\\apache-maven-3.9.16\r\nJava version: 25.0.4, vendor: Oracle Corporation, runtime: C:\\Program Files\\Java\\jdk-25.0.4\r\nDefault locale: en_US, platform encoding: UTF-8\r\nOS name: \"windows 11\", version: \"10.0\", arch: \"amd64\", family: \"windows\"",
+    "machine":  "OKEY-DAN",
+    "logicalProcessors":  8,
+    "operatingSystem":  "Microsoft Windows NT 10.0.26300.0",
+    "benchmarkJarSha256":  "A7718149D715F53C71AE5ECAEB82E9733EEDD8761A6416E755578DE556321A74",
+    "startedAt":  "2026-10-29T13:36:49.0196449+01:00",
+    "status":  "Completed",
+    "suiteArguments":  [
+                           "-jar",
+                           "C:\\Users\\Dell\\Documents\\ChatGPT\\ledger-settlement\\worktrees\\jmh\\benchmarks\\target\\benchmarks.jar",
+                           "MappingBenchmark",
+                           "StringJoinBenchmark",
+                           "SettlementCalcBenchmark",
+                           "-prof",
+                           "gc",
+                           "-rf",
+                           "json",
+                           "-rff",
+                           "C:\\Users\\Dell\\Documents\\ChatGPT\\ledger-settlement\\worktrees\\jmh\\evidence\\runs\\20261029-133647-d8da31d5\\results.json"
+                       ],
+    "dceArguments":  [
+                         "-jar",
+                         "C:\\Users\\Dell\\Documents\\ChatGPT\\ledger-settlement\\worktrees\\jmh\\benchmarks\\target\\benchmarks.jar",
+                         "DeadCodeEliminationDemoBenchmark",
+                         "-prof",
+                         "gc",
+                         "-rf",
+                         "json",
+                         "-rff",
+                         "C:\\Users\\Dell\\Documents\\ChatGPT\\ledger-settlement\\worktrees\\jmh\\evidence\\runs\\20261029-133647-d8da31d5\\dce-results.json"
+                     ],
+    "completedAt":  "2026-10-29T14:21:59.9335454+01:00",
+    "benchmarkSeconds":  2710.8394703999998
+}

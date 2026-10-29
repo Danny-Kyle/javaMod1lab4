@@ -4,94 +4,145 @@
 
 | Method | Why measured |
 |---|---|
-| `PaymentController.toResponse(PaymentEntity)` | Maps every successful POST response; creates the response record. |
-| `ProblemMessages.joinFieldErrors(List<String>)` | Builds validation-error detail on the invalid POST path. |
-| `SettlementService.computeOwed(long, BigDecimal)` | Applies the core fee rule on the settlement read path, preserving long minor units, BigDecimal and RoundingMode.DOWN. |
+| `PaymentController.toResponse(PaymentEntity)` | Maps every successful POST response; repeated response-record construction is a per-request allocation cost. |
+| `ProblemMessages.joinFieldErrors(List<String>)` | Builds validation detail on the invalid POST path; measures string/collection work for the service's error responses. |
+| `SettlementService.computeOwed(long, BigDecimal)` | Core fee calculation on every settlement read; preserves long minor units, BigDecimal and RoundingMode.DOWN. |
 
-Production methods remain in the service; wrappers, state and JMH dependencies
-live in `benchmarks`. The mapping state uses a payment shaped like the service
-request, the join state uses field-error messages, and the calculation state
-uses the seed total and fee rate. Inputs are created in `@Setup` under
-`@State(Scope.Benchmark)`, outside measured methods.
+Production methods remain in the service; benchmark wrappers and JMH dependencies
+live in `benchmarks`. Inputs are created in `@Setup` under `@State(Scope.Benchmark)`.
+The mapping input has the service's payment shape, string state contains field-error
+messages, and the settlement state uses the seed total and configured fee rate.
+No Spring context or database request is part of a measured method.
 
-## Reproduce
+## Reproduction and run identity
 
-Run `powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1` from the repository root.
-See [README](../README.md) for prerequisites, build-only checks and the exact
-commands. No manual local-Maven install or external sibling folder is required.
+Run `powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\run-benchmarks.ps1`
+from a clean repository root with Java 25, Maven and Docker running. See the
+[README](../README.md) for the single-command build and exact JMH invocations.
+The reactor builds the service and benchmark module without a manual jar install.
 
-## Configuration
+The student ran the complete command on 29 October 2026. The
+[manifest](../evidence/jmh-20261029-133647/manifest.json) identifies source commit
+`ae8f0d4b4810375aa123526c308ae4318be05135`, machine `OKEY-DAN` with
+8 logical processors, Oracle Java 25.0.4+7-LTS-189,
+Maven 3.9.16, command arguments and the benchmark-jar SHA-256. The stored jar hash
+was checked against the built jar. The manifest records completion and
+2710.839470 seconds for both benchmark invocations together,
+excluding the preceding build/test phase. This is one observed duration, not a
+guarantee for another machine or run.
 
-All four classes use AverageTime, MICROSECONDS, five warmup iterations,
-ten measurement iterations and three forks. The historical JSON records ten
-seconds per iteration. New runs retain the per-iteration console output so
-warmup stability can be assessed; do not assert stability without checking it.
+Both suites use JMH 1.37, AverageTime, MICROSECONDS, five ten-second warmups,
+ten ten-second measurements and three forks. Every method has 30 measured scores,
+stored as three forks of ten. No warmup/fork reductions or JVM argument overrides
+were used. Both console logs identify compiler Blackholes; the mode was consistent.
+JMH warns that compiler Blackholes are experimental. Generated machine code was
+not inspected, so these observations do not prove the exact optimized instruction
+sequence or generalize to another JVM/Blackhole mode.
 
-Student draft retained for confirmation, not replaced by agent-authored prose:
+Your explanation of forks (authorship confirmed during review):
 
 Forks run benchmarks in separate JVM processes to prevent JIT compilation profile pollution and account for OS-level runtime variance
 
-## Historical three-method result
+## Three real methods: final run
 
-Source: [`results.json`](../results.json), recovered byte-for-byte from the
-original sibling module. It records Java 25.0.4+7-LTS-189 and JMH 1.37. This is
-existing evidence, not a fresh run of the integrated reactor. The new runner
-will save a source commit, jar hash and machine manifest for its next run.
+Source for every score/error/unit below: matching entries in
+[`results.json`](../results.json), byte-identical to the
+[archived run JSON](../evidence/jmh-20261029-133647/results.json). Allocation comes from
+`secondaryMetrics.gc.alloc.rate.norm`; time comes from `primaryMetric`.
 
-| Benchmark | Time score +/- error | Allocated bytes/op +/- error |
+| Benchmark | Time score +/- error (us/op) | Allocation score +/- error (B/op) |
 |---|---|---|
-| `MappingBenchmark.mapEntityToResponse` | 0.00902785 +/- 0.00114297 us/op | 32.000006 +/- 8.01907e-07 B/op |
-| `SettlementCalcBenchmark.computeSettlementOwed` | 0.0221702 +/- 0.00551283 us/op | 1.5446873e-05 +/- 3.82067e-06 B/op |
-| `StringJoinBenchmark.joinFieldErrorMessages` | 0.310268 +/- 0.0800445 us/op | 501.33355 +/- 10.2507 B/op |
+| `MappingBenchmark.mapEntityToResponse` | 0.0111422159 +/- 0.000602535231 | 32.0000078 +/- 4.19984166e-07 |
+| `SettlementCalcBenchmark.computeSettlementOwed` | 0.0218896282 +/- 0.00129250144 | 1.5307792e-05 +/- 9.07156715e-07 |
+| `StringJoinBenchmark.joinFieldErrorMessages` | 0.209854552 +/- 0.0126288061 | 490.666813 +/- 10.25074 |
 
-All scores, errors and units above come from the matching primaryMetric and
-secondaryMetrics.gc.alloc.rate.norm entries in results.json. The allocation
-near zero for the settlement method is retained as measured; it must not be
-replaced with a guessed object size. The JIT can remove intermediate allocations.
+The logs label these score/error intervals as 99.9% confidence intervals and
+state the normal-distribution assumption. No interval for the three different
+operations overlaps, but that is not a controlled comparison of interchangeable
+implementations. It does not establish an optimization win between mapping,
+joining and calculation. The near-zero settlement allocation is the measured
+profiler result, not a guessed object size; intermediate objects may be optimized
+away. A result below one byte/op is an average, not a fractional object.
 
-None of these three recorded score intervals overlap. They represent different
-operations, so this observation does not demonstrate that an implementation
-change improved performance. No optimization win is claimed from comparing
-mapping, string joining and fee calculation. Comparable variants must be judged
-by their own intervals; overlapping comparisons must be labelled inconclusive.
-The confidence level for the final report must be checked against the saved JMH
-console output; it is not explicitly labelled in this historical JSON.
+Mapping constructs the response record in `PaymentController.toResponse`;
+the join method uses `Collectors.joining` in `ProblemMessages.joinFieldErrors`.
+Those are concrete source-level allocation sites. The aggregate GC profiler does
+not supply stack attribution, so the string method's entire allocation total
+is not assigned to a single source line without further profiling.
 
-For allocation-site interpretation, mapping constructs the response record in
-PaymentController.toResponse; joining invokes Collectors.joining in
-ProblemMessages.joinFieldErrors. These are source-level candidate allocation
-sites, not a replacement for an allocation profiler's stack evidence.
+## Deliberately broken benchmark and both fixes
 
-## Dead-code-elimination demonstration
+Source for every score/error/unit below:
+[`dce-results.json`](../evidence/jmh-20261029-133647/dce-results.json). The kept source has an identical
+sum-of-squares loop in all three variants; one discards its result, one returns
+it and one consumes it with Blackhole. The discarded loop has no observable
+result and is eligible for dead-code elimination; its tiny reported time is
+consistent with elimination of useful work. Returning/consuming the result
+makes the computation observable to the harness. No assembly-based claim is made.
 
-`DeadCodeEliminationDemoBenchmark` keeps the deliberately discarded result,
-return-value fix and Blackhole fix in source. The result of each fixed method
-is observable to JMH. The discarded calculation allows the JIT to remove work.
+| Benchmark | Time score +/- error (us/op) | Allocation score +/- error (B/op) |
+|---|---|---|
+| `DeadCodeEliminationDemoBenchmark.fixedConsumesWithBlackhole` | 0.721244454 +/- 0.111167736 | 0.000504288331 +/- 7.77066212e-05 |
+| `DeadCodeEliminationDemoBenchmark.fixedReturnsResult` | 0.649434241 +/- 0.0117840436 | 0.000454210356 +/- 8.21817305e-06 |
+| `DeadCodeEliminationDemoBenchmark.wrongDiscardsResult` | 0.000866378407 +/- 4.10393989e-06 | 6.05936352e-07 +/- 2.65278611e-09 |
 
-Previous report figures were 0.001 +/- 0.009 us/op (discarded),
-0.739 +/- 0.254 us/op (return), and 0.754 +/- 0.238 us/op (Blackhole).
-No raw demo output was found, so these remain unverified historical claims and
-are not final evidence. No precise 750x speedup is asserted: the discarded
-score's interval covers zero and makes a ratio unstable. The two reported fixed
-intervals overlap; that historical comparison is inconclusive, pending raw
-results. Run the script and use dce-results.json/dce.txt for the final table.
+Point-estimate ratios computed from the unrounded JSON scores are
+749.596522 for return/discarded and
+832.482029 for Blackhole/discarded; derivation is
+`fixed primaryMetric.score / discarded primaryMetric.score` in the
+[verification record](../evidence/jmh-20261029-133647/verification.json). Thus the broken harness reports
+a time hundreds of times smaller than the observable-work variants. This is a
+benchmarking error demonstration, not a service speedup. The exact discarded
+interval is positive; the rounded console display must not be interpreted as
+an interval reaching zero. The JSON is authoritative for the precision above.
 
-## Limits — student draft retained for confirmation
+**Return versus Blackhole is inconclusive.** Their 99.9% intervals are
+[0.637650197, 0.661218284] us/op (return) and
+[0.610076718, 0.83241219] us/op (Blackhole), taken directly from
+`primaryMetric.scoreConfidence` in dce-results.json. They overlap. No claim is made
+that either fixed approach is faster. Return is convenient for a single result;
+Blackhole can consume results explicitly when a return value alone is unsuitable.
+
+## Warmup review and statistical honesty
+
+The full warmup and measurement lines are retained in
+[`suite.txt`](../evidence/jmh-20261029-133647/suite.txt) and [`dce.txt`](../evidence/jmh-20261029-133647/dce.txt).
+The mapping fork warmups are broadly similar, but stability is not proved for
+every method. For example, settlement fork 3 warmup iterations 3–5 report
+0.018, 0.041 and 0.028 us/op in suite.txt; Blackhole fork 3 iterations 4–5 report
+0.640 and 0.823 us/op in dce.txt. These are observed variations, not discarded
+outliers. Five warmups were kept as specified, and no claim is made that they
+establish sufficient convergence for every case. Any stronger warmup conclusion
+would require further controlled measurements.
+
+The earlier report incorrectly treated differences between unrelated methods
+as statistically significant optimization results. That interpretation is
+withdrawn. This run does not establish that the earlier differences were caused
+by noise: hardware/power state and the historical run identity are not sufficiently
+controlled for such a causal claim. The two fixed DCE intervals here overlap,
+so their apparent point-estimate gap does not justify choosing one for speed.
+
+## Limits
 
 1. No Concurrency / Load: It measures isolated, single-threaded method execution and reveals nothing about system behavior under thread contention or parallel HTTP traffic.
 
 2. Fixed Synthetic Data: It uses small, static inputs in memory, failing to reflect cache misses or allocation behavior seen with real production data sizes.
 3. Isolated from Framework Stack: It executes in a microbenchmark harness without real-world runtime overhead like Tomcat request handling, Jackson JSON serialization, or database/JPA persistence.
 
-For Exceeds, the student should add a specific further measurement addressing
-each limit. The forks sentence and final limits must remain the student's words.
+Authorship of these three limits was confirmed during review. The student should name a
+specific further measurement for each limit. The forks sentence and these limits
+remain reserved for the student under the assistance brief.
 
-## Evidence still needed before resubmission
+## Evidence status and remaining submission checks
 
-- A clean Java 25 build/test log for this source and a newly identified run.
-- Raw DCE scores/errors, the exact command and any overrides (none planned).
-- A verified JMH confidence level, warmup assessment and elapsed full-run time.
-- Student confirmation/revision of the forks sentence and three limits.
+- Completed raw suite and DCE JSON, raw logs, manifest and verification are archived.
+- The root results.json is the new final-run JSON, not the recovered old run.
+- Earlier sibling results are preserved separately as historical evidence.
+- The student's successful Java 25 build-only transcript is retained; the final
+  runner also gates both suites on a successful build/test/discovery pass.
+- The forks explanation and three limits are confirmed as the student's writing; their follow-up measurement sentences remain to be supplied. Clean-clone reproduction is being checked.
+- The physical quiet/power conditions must be confirmed by the student; the
+  manifest does not record every hardware setting.
+- Changes remain local until the complete submission review; no PR was merged.
 
-See [evidence index](../evidence/README.md). Historical results remain clearly
-separate until the student supplies the new run; missing results are not invented.
+See [evidence index](../evidence/README.md) for every file and its provenance.

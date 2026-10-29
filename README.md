@@ -36,10 +36,11 @@ java -jar benchmarks\target\benchmarks.jar MappingBenchmark StringJoinBenchmark 
 The DCE command uses `DeadCodeEliminationDemoBenchmark` with the same profiler
 and JSON options. No warmup, measurement or fork counts are reduced. The source
 annotations require five warmup iterations, ten measurement iterations and
-three forks. This is a long run: the saved historical JSON reports ten seconds
-per iteration. No verified complete-run wall time is available yet; the new
-runner records the actual elapsed benchmark time in its manifest. Do not use
-the starter runbook's one-second-iteration estimate.
+three forks. The completed 29 October 2026 run recorded
+2710.839470 seconds for the two benchmark invocations together, excluding the
+preceding build/test phase (evidence/jmh-20261029-133647/manifest.json). This is
+an observed duration, not a prediction for every run. Keep the full prescribed
+settings; do not copy the starter runbook's one-second-iteration estimate.
 
 Each run gets a new `evidence/runs/<timestamp>-<id>/` directory containing
 `results.json`, `dce-results.json`, both console logs and a manifest with source
@@ -47,6 +48,6 @@ commit, Java/Maven versions, machine details and jar hash. These new run folders
 are ignored until reviewed. Send those files back for verification before
 promoting a final run to the committed root `results.json` and evidence index.
 
-The root `results.json` currently preserves the original saved Java 25 run;
-it is not a claim that the integrated build has been remeasured. See
+The root `results.json` now contains the completed 29 October 2026 Java 25
+run of this integrated build. The recovered sibling JSON is archived separately. See
 [the evidence index](evidence/README.md) and [the report](docs/benchmarks.md).

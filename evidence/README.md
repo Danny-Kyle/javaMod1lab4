@@ -1,16 +1,27 @@
 # JMH evidence index
 
-| File | Provenance | Status |
-|---|---|---|
-| `../results.json` | Original `C:\Users\Dell\IdeaProjects\benchmarks\results.json`, copied byte-for-byte during recovery | Historical three-method run on Java 25.0.4; not a new run of this build |
-| `runs/<id>/results.json` | Created only when the student runs `run-benchmarks.ps1` | Pending |
-| `runs/<id>/dce-results.json` | Same command, DCE demonstration | Pending; no original raw DCE output was found |
-| `runs/<id>/suite.txt`, `dce.txt`, `manifest.json` | Console output and run identity from that command | Pending |
+The student completed run `20261029-133647-d8da31d5` on 29 October 2026.
+Source identity and completion are in the raw manifest. Files were copied
+byte-for-byte out of the ignored runs directory into the committed archive.
 
-The historical results contain JMH 1.37, Java 25.0.4+7-LTS-189, five warmup
-iterations, ten measurement iterations and three forks for each real method.
-They contain allocation metrics, but no machine identity or DCE demonstration.
-Do not invent that missing provenance or relabel them as a fresh measurement.
+| File | Provenance and use |
+|---|---|
+| `../results.json` | Final three-real-method JSON; identical to archived results.json |
+| `jmh-20261029-133647/results.json` | Unmodified raw Java 25 real-method suite output |
+| `jmh-20261029-133647/dce-results.json` | Unmodified raw discarded/return/Blackhole results |
+| `jmh-20261029-133647/suite.txt` | Full suite console output, including warmups and confidence level |
+| `jmh-20261029-133647/dce.txt` | Full DCE console output and matching compiler-Blackhole mode |
+| `jmh-20261029-133647/manifest.json` | Raw source commit, command arguments, exact Java/Maven build, machine, jar hash and elapsed time |
+| `jmh-20261029-133647/verification.json` | Derived archive hashes, validation checks and point-estimate ratios; not raw benchmark output |
+| `build-check-2026-10-29.txt` | Student-pasted successful build-only/test/discovery transcript before runner-only logging corrections |
+| `historical/sibling-results.json` | Original recovered sibling JSON; retained for provenance, not the final run |
 
-After reviewing a new run, retain its raw files and commit its manifest; update
-the report and root results together. Never commit the generated target jars.
+PowerShell 5.1 wrote the raw console logs as UTF-16. Some console symbols were
+decoded incorrectly at capture time; the raw files are not edited to repair
+them. Use the raw JSON for precise scores, errors and units. The report uses
+ASCII +/- notation and values derived from JSON rather than the rounded console.
+
+The earlier failed run `runs/20261029-132443-dcfbda09` remains local with an
+empty JSON and its failure transcript; it is not measurement evidence. New
+runner output goes into unique ignored run folders and is promoted only after
+verification. Do not commit generated target jars or overwrite prior archives.

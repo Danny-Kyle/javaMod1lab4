@@ -1,0 +1,19 @@
+{
+  "sourceRun": "20261029-133647-d8da31d5",
+  "filesSha256": {
+    "results.json": "3a397e8e9d2615e5fb34ea8ef1c335e78dfd350a58b35711b12c4f742b6a8fda",
+    "dce-results.json": "edc0168691eea424383ab3a0bf3f8213e19cb7e2a2f44160c14386dad5dfb9c2",
+    "suite.txt": "a7af0058fa3ee57d41088d1c3ff9c0412c757d18271ff0e4bd3807ebe71494c0",
+    "dce.txt": "e998cab04f52dd16e7e5bd1c59cd61735eba79a14bc424c9a42e7b4b9b320142",
+    "manifest.json": "a22ae62e0fc807c414c2a475f109290dbac7ab7b248ecd6831524b8a8406918c"
+  },
+  "rootResultsSha256": "3a397e8e9d2615e5fb34ea8ef1c335e78dfd350a58b35711b12c4f742b6a8fda",
+  "timeRatiosFixedOverDiscarded": {
+    "fixedReturnsResult": 749.5965224322346,
+    "fixedConsumesWithBlackhole": 832.4820289592047
+  },
+  "fixedVariantsIntervalsOverlap": true,
+  "confidenceLevelPercentFromConsole": 99.9,
+  "benchmarkSecondsFromManifest": 2710.8394703999998,
+  "validation": "Both raw JSON files contain three results, each with 3 x 10 measured scores, 5 warmups, 3 forks, Java 25.0.4; compiler blackholes match across both logs."
+}
